@@ -16,12 +16,13 @@ void Clear_Packet(void)
     int i, b, c;
 
     //Initialize packet values
+    G_packet.schema = 0;
     G_packet.address = (EEPROM.read(3) << 8); //EEPROM address
-    G_packet.uptime = 0;
-    G_packet.n = 0;
-    G_packet.pressure = 0;
-    G_packet.temp = 0;
-    G_packet.humidity = 0;
+    G_packet.uptime_ms = 0;
+    //G_packet.n = 0;
+    G_packet.bmp185_press_pa = 0;
+    G_packet.bmp185_temp_decic = 0;
+    G_packet.humidity_centi_pct = 0;
     
     //Serial.println("clear packet variable initialization");
 
@@ -33,11 +34,11 @@ void Clear_Packet(void)
         c = i/3;
 
         //poll 10 times
-        //G_packet.batt[b] = 0;
-        //G_packet.panel[b] = 0;
+        G_packet.batt_mv[b] = 0;
+        G_packet.panel_mv[b] = 0;
 
         //poll 3 times
-        G_packet.irradiance[c] = 0;
+        G_packet.solar_irr_w_m2[c] = 0;
     }
 
     //Serial.println("clear packet bottom");
@@ -46,87 +47,106 @@ void Clear_Packet(void)
 /* Construct Packet */
 void Construct_Packet(void)
 {
-    //Serial.println("construct packet top");
+  //Serial.println("construct packet top");
 
-  //Variable for Index
-  int n = G_packet.n;
+  //Variable for Index and uptime
+  unsigned long uptime_ms;
 
-  //Variable Sensor Readings
-  //long Battery = 0;
-  long SolarIrr = 0;
-  long Humidity = 0;
-  long Panel = 0;
-  long Pressure = 0;
-  long Temp = 0;
-  unsigned long uptime;
-
-  //Sensor Samples
+  //Put schema number in packet
+  G_packet.schema = 297;
 
   //Update data
-  uptime = millis();
-  
-  //Overflow
-//G_packet.overflow_num = packet.overflow_num + chk_overflow(uptime, packet.uptime_ms);
+  uptime_ms = millis();
 
-  //Save uptime
-  G_packet.uptime = uptime;
+  //Put uptime in packet
+  G_packet.uptime_ms = uptime_ms;
 
-  //Sensor data
-  //G_packet.batt[n/10] = Battery;
-  //G_packet.panel[n/10] = Panel;
-  G_packet.pressure = pressure();
-  G_packet.temp = temp();
-  G_packet.humidity = humidity();
-  G_packet.irradiance[n/3] = irradiance();
+  //Poll and put battery and panel data in packet
+  for(int p = 0; p < 6; p++)
+  { G_packet.batt_mv[p] = battery();
+    G_packet.panel_mv[p] = panel();
+    delay(400);
+  }
   
-  //Serial.println("construct packet sensor data set");
-    
-  /* Increment index */
-  n += 1;
+  //Poll and put panel data in packet
+  /*for(int p = 0; p < 6; p++)
+  { G_packet.panel_mv[p] = panel();
+    delay(400);
+  }*/
+  
+  G_packet.bmp185_press_pa = pressure();
+  G_packet.bmp185_temp_decic = temp();
+  G_packet.humidity_centi_pct = humidity();
+
+  //Poll and put irradiance data in packet
+  for(int i = 0; i < 20; i++)
+  { G_packet.solar_irr_w_m2[i] = irradiance();
+    delay(300);
+  }
+  
+  /*//Hardcoded Test Packet
+  G_packet.uptime_ms = 1;
+  for(int p = 0; p <= 4; p++)
+  { G_packet.batt_mv[p] = 1;
+    Serial.print("Battery");
+    Serial.println(G_packet.batt_mv[p]);
+    delay(400);
+  }
+  for(int p = 0; p <= 4; p++)
+  { G_packet.panel_mv[p] = 2;
+    Serial.print("Panel");
+    Serial.println(G_packet.panel_mv[p]);
+    delay(400);
+  }
+  
+  G_packet.bmp185_press_pa = 3;
+  Serial.print("Pressure");
+  Serial.println(G_packet.bmp185_press_pa);
+  G_packet.bmp185_temp_decic = 4;
+  Serial.print("Temp");
+  Serial.println(G_packet.bmp185_temp_decic);
+  G_packet.humidity_centi_pct = 5;
+  Serial.print("Humidity");
+  Serial.println(G_packet.humidity_centi_pct);
+  for(int i = 0; i <= 14; i++)
+  { G_packet.solar_irr_w_m2[i] = 6;
+    Serial.print("Solar");
+    Serial.println(G_packet.solar_irr_w_m2[i]);
+    delay(1000);
+  }*/
 }
 
 /* Transmission Code */
 void Transmit_Packet(void)
-{
+{   
     /* Create Xbee object */
     XBee xbee = XBee();
 
-    /* Variable length */
-    int len = 0;
+    /* Packet to be transmitted */
+    uint8_t payload[MAX_SIZE];
 
     /* Obtain address of receiving end */
     XBeeAddress64 addr64 = XBeeAddress64(0x0, 0x0);
     ZBTxStatusResponse txStatus = ZBTxStatusResponse();
-    
-    /* Packet to be transmitted */
-    uint8_t payload[MAX_SIZE];
 
     /* Clear the payload */
     memset(payload, '\0', sizeof(payload));
 
-    /* Obtain length of the packet */
-    len = sizeof(G_packet);
-
-    /* Debug packet length */
-    Serial.println(F("BIN Length is: "));
-    Serial.print(len);
+    /* Debug Packet */
+    //payload[0] = '1';
+    //payload[1] = '5';
 
     /* Transfer information into payload */
-    memcpy(payload, &G_packet, len);
+    memcpy(payload, &G_packet, sizeof(payload));
 
-    /* Checks to see if the data was transferred correctly */
-    /* Can check any data value in struct schema defined in schema.h */
-    //Serial.println(((schema)payload)->batt[1]);
+    for(int i = 0; i < MAX_SIZE; i++)
+    { Serial.write(payload[i]);}
 
+    ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
+  
     /* Transfer the payload */
-    ZBTxRequest zbTx = ZBTxRequest(addr64, payload, len);
     xbee.send(zbTx); //!!Prints packet to serial monitor
 
-    /* Debug payload */
-    if (txStatus.getDeliveryStatus() == SUCCESS)
-    {
-      // success time to celebrate
-      Serial.print("yes");
-      Serial.println("Received Data:");
-    }
+    /* delay */
+    delay(1000);
 }
