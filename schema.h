@@ -7,41 +7,16 @@
 #ifndef SCHEMA_H
 #define SCHEMA_H
 
-/* Struct for Binary packet transfer */
 typedef struct {
-    
-    /* Identification information */
-    uint16_t schema_ID;      //Schema ID number
+    uint16_t schema;      //Schema ID number
     uint16_t address;     //Arduino Address
-    
-    /* Overflow flags */
-    uint8_t overflow_num;  //Number of times function millis() overflow
+    uint32_t uptime_ms;    //Time since the start of program
+    uint16_t batt_mv[6];   //Battery voltage (millivolts)
+    uint16_t panel_mv[6];  //Panel voltage (millivolts)
+    uint32_t bmp185_press_pa;  //Pressure value (pascals)
+    int16_t bmp185_temp_decic;   //Temperature value (celsius)
+    uint16_t humidity_centi_pct; //Humidity value (centi-pascals)
+    uint16_t solar_irr_w_m2[20];    //Solar Irradiance (millivolts)
+} schema_296_full;
 
-    /* Data variables */
-    //uint16_t batt[15];   //Battery voltage (millivolts)
-    //uint16_t panel[15];  //Panel voltage (millivolts)
-    uint8_t n;       //Number of data points in packet (0...30)
-    int16_t temp;   //Temperature value (celsius)
-    uint16_t humidity; //Humidity value (centi-pascals)
-    uint16_t irradiance[60];    //Solar Irradiance (millivolts)
-    uint32_t uptime;    //Time since the start of program
-    uint32_t pressure;  //Pressure value (pascals)
-
-} schema;
-
-
-/* Struct for Health Check */
-typedef struct {
-  
-  /* Identification information */
-  uint16_t schema;  //Schema ID number
-  uint16_t address; //ADdress of Arduino
-  
-  /* Data variables */
-  uint32_t uptime_health; //Time since the start of program
-  uint16_t batt; //Battery voltage (millivolts)
-
-} schema_5;
-
-typedef schema_5 schema_health;
 #endif
