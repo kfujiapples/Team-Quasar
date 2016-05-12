@@ -1,4 +1,3 @@
-/* config.h */
 /* Team: Team Quasar */
 /* config.h
  * Pin configuration for ATMEGA 328P
@@ -11,6 +10,12 @@
 //Arduino Pins
 //Solar Irradiance
 #define APOGEE_SOLAR A2
+
+//Battery Pins
+#define BATTERY A1 //24
+
+//Panel Pins
+#define PANEL A0 //23
 
 //Receiver/Transmitter
 #define PIN_RX 0
@@ -27,5 +32,9 @@
 //Humidity
 #define HUMID_CLK 7
 #define HUMID_DATA 8
+
+//Pressure
+//#define SDA_PIN A4
+//#define SCL_PIN A5
 
 #endif
