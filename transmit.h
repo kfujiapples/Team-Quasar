@@ -7,7 +7,7 @@
 #include "sensors.h"
 #include "util.h"
 
-#define MAX_SIZE 100
+#define MAX_SIZE 80
 
 /* External Libraries */
 #include <EEPROM.h>
@@ -17,8 +17,8 @@
 #ifndef TRANSMIT_H
 #define TRANSMIT_H
 
-/* Global Variable for Packet */
-extern schema G_packet;
+/* Global Variables */
+extern schema_296_full G_packet;
 
 /* Clear Packet */
 void Clear_Packet(void);
@@ -28,5 +28,8 @@ void Construct_Packet(void);
 
 /* Transmission Code */
 void Transmit_Packet(void);
+
+/* XBee Sleep */
+void XbeeSleep(void);
 
 #endif
