@@ -8,23 +8,26 @@
 /* External libraries */
 #include <OneWire.h>
 #include <SHT1x.h>
-#include <Wire.h>
 #include <Adafruit_BMP085.h>
+#include <DallasTemperature.h>
 
 /* Included header files */
 #include "config.h"
 
-/* Pin configuration */
+/* Sensor object variables */
+extern Adafruit_BMP085 bmp;
+extern SHT1x sht1x;
+extern OneWire R_temp;
+extern DallasTemperature roof_temp;
 
-/*#define dataPin  11
-#define clockPin 12
-#define Temp 3
-#define apogee A2*/
-
-/* These are the functions for our code */
+/* Initialization function */
 void init1(void);
+
+/* Sensor functions */
+uint16_t battery(void);
+uint16_t panel(void);
 int16_t temp(void);
-int32_t pressure(void);
+uint32_t pressure(void);
 uint16_t humidity (void);
 uint16_t irradiance(void);
 
